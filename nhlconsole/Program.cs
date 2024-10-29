@@ -4,27 +4,32 @@ using System.Linq.Dynamic.Core;
 
 namespace nhlconsole {
     internal class Program {
+        // take in query, return sorted list
+        static List<csvRow> handleQuery(string query) {
+            var list = csvParser.getRows().AsQueryable(); //cast to queryable to use dynamic linq
+            var split = query.Split(' '); //ie { "GP", ">=", "50" }
+
+            var where = $"{split[0]} {split[1]} {split[2]}";
+            var res = list.Where(where);
+            return res.ToList();
+        }
         static void Main(string[] args)
         {
-            var rows = csvParser.getRows();
-                //foreach (var r in rows) {
-                //    richTextBox1.Text += r.name + " " + r.team + "\n";
-                //}
-            var res = handleQuery("GP >= 50");
-            Console.WriteLine($"original count: {rows.Count}, filtered count: {res.Count}");
-                //foreach (var r in res) {
-                //    Console.WriteLine(r);
-                //}
-            
-            // take in query, return sorted list
-            List<csvRow> handleQuery(string query) {
-                var list = csvParser.getRows().AsQueryable(); //cast to queryable to use dynamic linq
-                var split = query.Split(' '); //ie { "GP", ">=", "50" }
+            string query = "";
+            do {
+                Console.WriteLine("Enter a query ie \"GP >= 50\". Type exit to exit");
+                query = Console.ReadLine();
+                
+                if (query == "exit") { break; }
+                var rows = csvParser.getRows();
+                try { 
+                    var res = handleQuery(query);
+                    Console.WriteLine($"original count: {rows.Count}, filtered count: {res.Count}");
+                } catch {
+                    Console.WriteLine("Invalid query");
+                }
+            } while (true);
 
-                var where = $"{split[0]} {split[1]} {split[2]}";
-                var res = list.Where(where);
-                return res.ToList();
-            }
         }
 
         public static class csvParser {
