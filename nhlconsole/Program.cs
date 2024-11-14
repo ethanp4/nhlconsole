@@ -4,30 +4,44 @@ using System.Linq.Dynamic.Core;
 
 namespace nhlconsole {
     internal class Program {
-        // take in query, return sorted list
-        static List<csvRow> handleQuery(string query) {
-            var list = csvParser.getRows().AsQueryable(); //cast to queryable to use dynamic linq
+        static List<csvRow> handleQuery(IQueryable<csvRow> list, string query) {
             var split = query.Split(' '); //ie { "GP", ">=", "50" }
 
             var where = $"{split[0]} {split[1]} {split[2]}";
             var res = list.Where(where);
             return res.ToList();
         }
+
+        static void printResult(List<csvRow> list)
+        {
+            Console.WriteLine($"Filtered results [{list.Count} rows]:");
+            foreach (var r in list) {
+            }
+        }
+
         static void Main(string[] args)
         {
             string query = "";
             do {
-                Console.WriteLine("Enter a query ie \"GP >= 50\". Type exit to exit");
+                Console.WriteLine("Enter one or multiple queries separated by a comma ie 'gp > 10, gp < 50'. Type exit to exit");
                 query = Console.ReadLine();
-                
                 if (query == "exit") { break; }
+                
+                var expressions = query.Split(","); //get list of expressions if there are multiple
                 var rows = csvParser.getRows();
-                try { 
-                    var res = handleQuery(query);
-                    Console.WriteLine($"original count: {rows.Count}, filtered count: {res.Count}");
-                } catch {
-                    Console.WriteLine("Invalid query");
+                for (int i = 0; i < expressions.Length; i++) //keep modifying rows until done all the expressions
+                {
+                    var expr = expressions[i];
+                    var prevLength = rows.Count;
+                    try {
+                        expr = expr.Trim();
+                        rows = handleQuery(rows.AsQueryable(), expr);
+                        Console.WriteLine($"Expression '{expr}' filtered out {prevLength - rows.Count} from remaining total {prevLength}");
+                    } catch {
+                        Console.WriteLine($"Invalid query: '{expr}'");
+                    }
                 }
+                printResult(rows);
             } while (true);
 
         }
