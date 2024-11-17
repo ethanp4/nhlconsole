@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualBasic.FileIO;
+using System.Collections.Generic;
 using System.Linq.Dynamic.Core;
 
 namespace nhlconsole {
@@ -8,12 +9,25 @@ namespace nhlconsole {
             string query = "";
             do
             {
-                Console.WriteLine("Enter one or multiple queries separated by a comma ie 'gp > 10, gp < 50'. Type exit to exit");
-                query = Console.ReadLine();
-                if (query == "exit") { break; }
+                Console.WriteLine("=========================================================================");
+                Console.WriteLine("Enter one or multiple queries separated by a comma ie 'gp > 10, gp < 50'. " +
+                    "\nType h for help" +
+                    "\nJust press enter to print all data" +
+                    "\nType e to exit");
+                query = Console.ReadLine().ToLower();
+                if (query == "e") { break; }
+                if (query == "h") {
+                    Console.WriteLine("\nPossible column names (not case sensitive) are:" +
+                        "\nName,Team,Pos,GP,G,A,P,+/-,PIM,P/GP,PPG,PPP,SHG,SHP,GWG,OTG,S,S%,TOI/GP,Shifts/GP,FOW%" +
+                        "\nPossible operators are <, <=, =, >, >=");
+                    continue; 
+                }
+                var filterHandler = new CsvFilterHandler(csvParser.getRows()); 
+                if (query == "") {
+                    filterHandler.printAllRows();
+                }
 
                 // Use CsvFilterHandler to handle the input query
-                var filterHandler = new CsvFilterHandler(csvParser.getRows());
                 filterHandler.ApplyFilters(query);
             } while (true);
         }
@@ -104,7 +118,6 @@ namespace nhlconsole {
         public class CsvFilterHandler
         {
             private List<csvRow> rows;
-
             public CsvFilterHandler(List<csvRow> rows)
             {
                 this.rows = rows;
@@ -123,9 +136,10 @@ namespace nhlconsole {
                         rows = FilterRows(rows.AsQueryable(), expr); // Apply the filter
                         Console.WriteLine($"Expression '{expr}' filtered out {prevLength - rows.Count} from remaining total {prevLength}");
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        Console.WriteLine($"Invalid query: '{expr}'"); // Catch and report invalid queries
+                        Console.WriteLine($"Invalid query: '{e.Message}'"); // Catch and report invalid queries
+                        return;
                     }
                 }
                 PrintResults(rows); // Output the filtered results
@@ -134,9 +148,59 @@ namespace nhlconsole {
             // Filters the rows based on the given expression
             private List<csvRow> FilterRows(IQueryable<csvRow> queryableRows, string expression)
             {
-                return queryableRows.Where(expression).ToList();
+                var split = expression.Split(" ");
+                if (split.Length != 3 ) {
+                    throw new Exception("Expression needs to follow the format [column] [operator] [value]");
+                }
+                var field = split[0].Trim();
+                var op = split[1].Trim();
+                var val = split[2].Trim();
+                switch (field.ToLower()) { //convert certain values and throw an error if none match
+                    case "name":
+                    case "team":
+                    case "pos":
+                    case "gp":
+                    case "g":
+                    case "a":
+                    case "p":
+                    case "pim":
+                    case "ppg":
+                    case "ppp":
+                    case "shg":
+                    case "shp":
+                    case "gwg":
+                    case "otg":
+                    case "s":
+                        break;
+                    case "+/-":
+                        field = "plusMinus";
+                        break;
+                    case "p/gp":
+                        field = "pOverGp";
+                        break;
+                    case "s%":
+                        field = "sPercent";
+                        break;
+                    case "toi/gp":
+                        field = "toiOverGp";
+                        break;
+                    case "shifts/gp":
+                        field = "shiftsOverGp";
+                        break;
+                    case "fow%":
+                        field = "fowPercent";
+                        break;
+                    default:
+                        throw new Exception($"{field} is not a valid column name");
+                }
+
+                var where = $"{field} {op} {val}";
+                return queryableRows.Where(where).ToList();
             }
 
+            public void printAllRows() {
+                PrintResults(rows);
+            }
             private void PrintResults(List<csvRow> filteredRows)
             {
                 Console.WriteLine($"Filtered results [{filteredRows.Count} rows]:");
