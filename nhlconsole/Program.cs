@@ -1,56 +1,69 @@
-﻿
-using Microsoft.VisualBasic.FileIO;
+﻿using Microsoft.VisualBasic.FileIO;
 using System.Linq.Dynamic.Core;
 
-namespace nhlconsole {
-    internal class Program {
-        // take in query, return sorted list
-        static List<csvRow> handleQuery(string query) {
-            var list = csvParser.getRows().AsQueryable(); //cast to queryable to use dynamic linq
+namespace nhlconsole
+{
+    internal class Program
+    {
+        static List<csvRow> handleQuery(IQueryable<csvRow> list, string query)
+        {
             var split = query.Split(' '); //ie { "GP", ">=", "50" }
 
             var where = $"{split[0]} {split[1]} {split[2]}";
             var res = list.Where(where);
             return res.ToList();
         }
+
+        static void printResult(List<csvRow> list)
+        {
+            Console.WriteLine($"Filtered results [{list.Count} rows]:");
+            foreach (var r in list)
+            {
+            }
+        }
+
         static void Main(string[] args)
         {
             string query = "";
-            do {
-                Console.WriteLine("Enter a query ie \"GP >= 50\". Type exit to exit");
+            do
+            {
+                Console.WriteLine("Enter one or multiple queries separated by a comma ie 'gp > 10, gp < 50'. Type exit to exit");
                 query = Console.ReadLine();
-                
                 if (query == "exit") { break; }
-                var rows = csvParser.getRows();
-                try { 
-                    var res = handleQuery(query);
-                    Console.WriteLine($"original count: {rows.Count}, filtered count: {res.Count}");
-                } catch {
-                    Console.WriteLine("Invalid query");
-                }
-            } while (true);
 
+                // Use CsvFilterHandler to handle the input query
+                var filterHandler = new CsvFilterHandler(csvParser.getRows());
+                filterHandler.ApplyFilters(query);
+            } while (true);
         }
 
-        public static class csvParser {
+        public static class csvParser
+        {
             private static List<csvRow> rows = new List<csvRow>();
-            public static List<csvRow> getRows() {
+            public static List<csvRow> getRows()
+            {
                 return rows;
             }
 
-            static csvParser() { //static constructor is called once this class is used for the first time
-                using (TextFieldParser textFieldParser = new TextFieldParser(@"..\..\..\players.csv")) {
+            // Static constructor is called once this class is used for the first time
+            static csvParser()
+            {
+                using (TextFieldParser textFieldParser = new TextFieldParser(@"..\..\..\players.csv"))
+                {
                     textFieldParser.TextFieldType = FieldType.Delimited;
                     textFieldParser.SetDelimiters(",");
                     var doneFirstLine = false;
-                    while (!textFieldParser.EndOfData) {
+                    while (!textFieldParser.EndOfData)
+                    {
                         string[] cols = textFieldParser.ReadFields();
-                        if (doneFirstLine == false) { //skip first line
+                        if (doneFirstLine == false)
+                        { //skip first line
                             doneFirstLine = true;
                             continue;
                         }
                         //big ugly statement
-                        var row = new csvRow {
+                        var row = new csvRow
+                        {
                             //Name,Team,Pos,GP,G,A,P,+/-,PIM,P/GP,PPG,PPP,SHG,SHP,GWG,OTG,S,S%,TOI/GP,Shifts/GP,FOW%
                             name = cols[0],
                             team = cols[1],
@@ -81,7 +94,8 @@ namespace nhlconsole {
         }
 
 
-        public class csvRow {
+        public class csvRow
+        {
             public string name;
             public string team;
             public string pos; //could change to enum 
@@ -105,5 +119,52 @@ namespace nhlconsole {
             public float fowPercent;
         }
 
+        //Print data corresponding to filters applied
+        public class CsvFilterHandler
+        {
+            private List<csvRow> rows;
+
+            public CsvFilterHandler(List<csvRow> rows)
+            {
+                this.rows = rows;
+            }
+
+            // Apply the filters based on the user's input
+            public void ApplyFilters(string query)
+            {
+                var expressions = query.Split(","); // Get list of expressions if there are multiple
+                for (int i = 0; i < expressions.Length; i++) // Keep modifying rows until done with all the expressions
+                {
+                    var expr = expressions[i].Trim();
+                    var prevLength = rows.Count;
+                    try
+                    {
+                        rows = FilterRows(rows.AsQueryable(), expr); // Apply the filter
+                        Console.WriteLine($"Expression '{expr}' filtered out {prevLength - rows.Count} from remaining total {prevLength}");
+                    }
+                    catch
+                    {
+                        Console.WriteLine($"Invalid query: '{expr}'"); // Catch and report invalid queries
+                    }
+                }
+                PrintResults(rows); // Output the filtered results
+            }
+
+            // Filters the rows based on the given expression
+            private List<csvRow> FilterRows(IQueryable<csvRow> queryableRows, string expression)
+            {
+                return queryableRows.Where(expression).ToList();
+            }
+
+            private void PrintResults(List<csvRow> filteredRows)
+            {
+                Console.WriteLine($"Filtered results [{filteredRows.Count} rows]:");
+                foreach (var row in filteredRows)
+                {
+                    // Output key fields for each row; add more fields as necessary
+                    Console.WriteLine($"Name: {row.name}, Team: {row.team}, GP: {row.gp}, G: {row.g}, A: {row.a}");
+                }
+            }
+        }
     }
 }
