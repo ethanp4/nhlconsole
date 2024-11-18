@@ -1,28 +1,12 @@
 ﻿using Microsoft.VisualBasic.FileIO;
 using System.Collections.Generic;
 using System.Linq.Dynamic.Core;
+using System.Reflection.Metadata.Ecma335;
 
 namespace nhlconsole
 {
     internal class Program
     {
-        static List<csvRow> handleQuery(IQueryable<csvRow> list, string query)
-        {
-            var split = query.Split(' '); //ie { "GP", ">=", "50" }
-
-            var where = $"{split[0]} {split[1]} {split[2]}";
-            var res = list.Where(where);
-            return res.ToList();
-        }
-
-        static void printResult(List<csvRow> list)
-        {
-            Console.WriteLine($"Filtered results [{list.Count} rows]:");
-            foreach (var r in list)
-            {
-            }
-        }
-
         static void Main(string[] args)
         {
             string query = "";
@@ -33,8 +17,8 @@ namespace nhlconsole
                 Console.WriteLine("=========================================================================");
                 Console.WriteLine("Enter one or multiple queries separated by a comma ie 'gp > 10, gp < 50'. " +
                     "\nType h for help" +
-                    "\nPress s to sort" +
-                    "\nJust press enter to print all data" +
+                    "\nPress s to sort the previous result" +
+                    "\nJust press enter to reload all data" +
                     "\nType e to exit");
                 query = Console.ReadLine().ToLower();
                 if (query == "e") { break; }
@@ -46,6 +30,7 @@ namespace nhlconsole
                 }
                 if (query == "") {
                     filterHandler.printAllRows();
+                    continue;
                 }
                 if (query == "s") {
                     var valid = false;
