@@ -27,11 +27,13 @@ namespace nhlconsole
         {
             string query = "";
             Console.WriteLine("Maximize the window and press ctrl + - to see all columns");
+            var filterHandler = new CsvFilterHandler(csvParser.getRows()); 
             do
             {
                 Console.WriteLine("=========================================================================");
                 Console.WriteLine("Enter one or multiple queries separated by a comma ie 'gp > 10, gp < 50'. " +
                     "\nType h for help" +
+                    "\nPress s to sort" +
                     "\nJust press enter to print all data" +
                     "\nType e to exit");
                 query = Console.ReadLine().ToLower();
@@ -42,13 +44,41 @@ namespace nhlconsole
                         "\nPossible operators are <, <=, =, >, >=");
                     continue; 
                 }
-                var filterHandler = new CsvFilterHandler(csvParser.getRows()); 
                 if (query == "") {
                     filterHandler.printAllRows();
                 }
-
+                if (query == "s") {
+                    var valid = false;
+                    var col = -1;
+                    var dir = -1;
+                    do {
+                        try {
+                            Console.WriteLine("Which column do you want to sort by");
+                            Console.WriteLine("0   | 1   | 2  | 3 | 4| 5| 6| 7  | 8  | 9   | 10 | 11 | 12 | 13 | 14 | 15 | 16| 17| 18    | 19       | 20");
+                            Console.WriteLine("Name| Team| Pos| GP| G| A| P| +/-| PIM| P/GP| PPG| PPP| SHG| SHP| GWG| OTG| S | S%| TOI/GP| Shifts/GP| FOW%");
+                            col = int.Parse(Console.ReadLine());
+                            if (col < 0 || col > 20) {
+                                throw new Exception("Select a valid column (0 - 20)");
+                            }
+                            Console.WriteLine("In which direction");
+                            Console.WriteLine("0         | 1");
+                            Console.WriteLine("Ascending | Descending");
+                            dir = int.Parse(Console.ReadLine());
+                            if (dir != 0 && dir != 1) {
+                                throw new Exception("Select a valid direction (0 or 1)");
+                            }
+                            valid = true;
+                        } catch (Exception e) {
+                            Console.WriteLine(e.Message);
+                            valid = false;
+                        }
+                    } while (!valid);
+                    filterHandler.sortResultsAndReprint(col, dir);
+                } else {
+                    filterHandler = new CsvFilterHandler(csvParser.getRows()); //a new query is being done so the previous results can be discarded
+                    filterHandler.ApplyFilters(query);
+                }
                 // Use CsvFilterHandler to handle the input query
-                filterHandler.ApplyFilters(query);
             } while (true);
         }
 
@@ -141,6 +171,15 @@ namespace nhlconsole
             public CsvFilterHandler(List<csvRow> rows)
             {
                 this.rows = rows;
+            }
+
+            public void sortResultsAndReprint(int col, int order) { //col 0 - 20, order 0:asc 1:desc
+                string[] columnNames = { "name", "team", "pos", "gp", "g", "a", "p", "plusMinus", "pim", "pOverGp", "ppg", "ppp", "shg", "shp", "gwg", "otg", "s", "sPercent", "toiOverGp", "shiftsOverGp", "fowPercent" };
+                rows = rows.AsQueryable().OrderBy(columnNames[col]).ToList();
+                if (order == 1) {
+                    rows.Reverse();
+                }
+                printAllRows();
             }
 
             // Apply the filters based on the user's input
