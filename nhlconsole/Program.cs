@@ -26,6 +26,7 @@ namespace nhlconsole
         static void Main(string[] args)
         {
             string query = "";
+            Console.WriteLine("Maximize the window and press ctrl + - to see all columns");
             do
             {
                 Console.WriteLine("=========================================================================");
@@ -196,6 +197,7 @@ namespace nhlconsole
                         break;
                     case "p/gp":
                         field = "pOverGp";
+                        if (val == "----") { val = "-999.0"; }
                         break;
                     case "s%":
                         field = "sPercent";
@@ -223,17 +225,17 @@ namespace nhlconsole
             private void PrintResults(List<csvRow> filteredRows)
             {
                 // Print the header row with appropriate spacing
-                Console.WriteLine("| {0,-20} | {1,-5} | {2,-3} | {3,3} | {4,2} | {5,2} | {6,2} | {7,2} | {8,2} | {9,3} | {10,3} | {11,3} | {12,3} | {13,3} | {14,-3} | {15,-3} | {16,2} | {17,3} | {18,-7} | {19,-7} | {20,-5} |",
+                Console.WriteLine("| {0,-24} | {1,-8} | {2,-3} | {3,3} | {4,2} | {5,2} | {6,3} | {7,4} | {8,4} | {9,4} | {10,3} | {11,3} | {12,3} | {13,3} | {14,3} | {15,3} | {16,3} | {17,5} | {18,-7} | {19,-11} | {20,-5} |",
                                     "Player", "Team", "Pos", "GP", "G", "A", "P", "+/-", "PIM", "P/GP", "PPG", "PPP", "SHG", "SHP", "GWG", "OTG", "S", "S%", "TOI/GP", "Shifts/GP", "FOW%");
 
                 // Print a separator line for the table
-                Console.WriteLine(new string('-', 130));
+                Console.WriteLine(new string('-', 170));
 
                 // Loop through each row and print the data, formatted in a table
                 foreach (var row in filteredRows)
                 {
-                    Console.WriteLine("| {0,-20} | {1,-5} | {2,-3} | {3,3} | {4,2} | {5,2} | {6,2} | {7,2} | {8,2} | {9,3:F2} | {10,3} | {11,3} | {12,3} | {13,3} | {14,3} | {15,3} | {16,3} | {17,3:F2} | {18,-7} | {19,-7:F2} | {20,-5:F2} |",
-                                    row.name, row.team, row.pos, row.gp, row.g, row.a, row.p, row.plusMinus, row.pim, row.pOverGp, row.ppg, row.ppp, row.shg, row.shp, row.gwg, row.otg, row.s, row.sPercent, row.toiOverGp, row.shiftsOverGp, row.fowPercent);
+                    Console.WriteLine("| {0,-24} | {1,-8} | {2,-3} | {3,3} | {4,2} | {5,2} | {6,3} | {7,4} | {8,4} | {9,4:F2} | {10,3} | {11,3} | {12,3} | {13,3} | {14,3} | {15,3} | {16,3} | {17,5:F2} | {18,-11} | {19,-7:F2} | {20,-5:F2} |",
+                                    row.name, row.team, row.pos, row.gp, row.g, row.a, row.p, row.plusMinus, row.pim, row.pOverGp == -999.0 ? "----" : row.pOverGp , row.ppg, row.ppp, row.shg, row.shp, row.gwg, row.otg, row.s, row.sPercent, row.toiOverGp, row.shiftsOverGp, row.fowPercent);
                 }
             }
 
