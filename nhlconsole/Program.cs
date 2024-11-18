@@ -1,8 +1,27 @@
 ﻿using Microsoft.VisualBasic.FileIO;
 using System.Linq.Dynamic.Core;
 
-namespace nhlconsole {
-    internal class Program {
+namespace nhlconsole
+{
+    internal class Program
+    {
+        static List<csvRow> handleQuery(IQueryable<csvRow> list, string query)
+        {
+            var split = query.Split(' '); //ie { "GP", ">=", "50" }
+
+            var where = $"{split[0]} {split[1]} {split[2]}";
+            var res = list.Where(where);
+            return res.ToList();
+        }
+
+        static void printResult(List<csvRow> list)
+        {
+            Console.WriteLine($"Filtered results [{list.Count} rows]:");
+            foreach (var r in list)
+            {
+            }
+        }
+
         static void Main(string[] args)
         {
             string query = "";
@@ -39,7 +58,7 @@ namespace nhlconsole {
                         string[] cols = textFieldParser.ReadFields();
                         if (doneFirstLine == false)
                         { //skip first line
-                             doneFirstLine = true;
+                            doneFirstLine = true;
                             continue;
                         }
                         //big ugly statement
