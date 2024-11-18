@@ -58,7 +58,7 @@ namespace nhlconsole
                         string[] cols = textFieldParser.ReadFields();
                         if (doneFirstLine == false)
                         { //skip first line
-                            doneFirstLine = true;
+                             doneFirstLine = true;
                             continue;
                         }
                         //big ugly statement
@@ -158,13 +158,21 @@ namespace nhlconsole
 
             private void PrintResults(List<csvRow> filteredRows)
             {
-                Console.WriteLine($"Filtered results [{filteredRows.Count} rows]:");
+                // Print the header row with appropriate spacing
+                Console.WriteLine("| {0,-20} | {1,-5} | {2,-3} | {3,3} | {4,2} | {5,2} | {6,2} | {7,2} | {8,2} | {9,3} | {10,3} | {11,3} | {12,3} | {13,3} | {14,-3} | {15,-3} | {16,2} | {17,3} | {18,-7} | {19,-7} | {20,-5} |",
+                                    "Player", "Team", "Pos", "GP", "G", "A", "P", "+/-", "PIM", "P/GP", "PPG", "PPP", "SHG", "SHP", "GWG", "OTG", "S", "S%", "TOI/GP", "Shifts/GP", "FOW%");
+
+                // Print a separator line for the table
+                Console.WriteLine(new string('-', 130));
+
+                // Loop through each row and print the data, formatted in a table
                 foreach (var row in filteredRows)
                 {
-                    // Output key fields for each row; add more fields as necessary
-                    Console.WriteLine($"Name: {row.name}, Team: {row.team}, GP: {row.gp}, G: {row.g}, A: {row.a}");
+                    Console.WriteLine("| {0,-20} | {1,-5} | {2,-3} | {3,3} | {4,2} | {5,2} | {6,2} | {7,2} | {8,2} | {9,3:F2} | {10,3} | {11,3} | {12,3} | {13,3} | {14,3} | {15,3} | {16,3} | {17,3:F2} | {18,-7} | {19,-7:F2} | {20,-5:F2} |",
+                                    row.name, row.team, row.pos, row.gp, row.g, row.a, row.p, row.plusMinus, row.pim, row.pOverGp, row.ppg, row.ppp, row.shg, row.shp, row.gwg, row.otg, row.s, row.sPercent, row.toiOverGp, row.shiftsOverGp, row.fowPercent);
                 }
             }
+
         }
     }
 }
